@@ -48,8 +48,8 @@ class Perceptron(LinearModel):
         # Q1.1a
         y_hat = np.argmax(self.W @ x_i)
         if (y_hat != y_i):
-            self.W[y_i, :] += x_i
-            self.W[y_hat, :] -= x_i
+            self.W[y_i] += x_i
+            self.W[y_hat] -= x_i
 
 
 class LogisticRegression(LinearModel):
@@ -60,7 +60,14 @@ class LogisticRegression(LinearModel):
         learning_rate (float): keep it at the default value for your plots
         """
         # Q1.1b
-        raise NotImplementedError
+        exps = np.exp(np.expand_dims(self.W @ x_i, axis=1))
+        Z = np.sum(exps)
+        prob = exps/Z 
+
+        y_label = np.zeros((self.W.shape[0], 1))
+        y_label[y_i] = 1
+
+        self.W = self.W + learning_rate * (y_label - prob) @ np.array([x_i])
 
 
 class MLP(object):
