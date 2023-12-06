@@ -6,8 +6,10 @@ import argparse
 
 import numpy as np
 import matplotlib.pyplot as plt
+from sympy import Derivative
 
 import utils
+from icecream import ic
 
 
 class LinearModel(object):
@@ -62,7 +64,7 @@ class LogisticRegression(LinearModel):
         # Q1.1b
         exps = np.exp(np.expand_dims(self.W @ x_i, axis=1))
         Z = np.sum(exps)
-        prob = exps/Z 
+        prob = exps/Z
 
         y_label = np.zeros((self.W.shape[0], 1))
         y_label[y_i] = 1
@@ -76,13 +78,53 @@ class MLP(object):
     # in main().
     def __init__(self, n_classes, n_features, hidden_size):
         # Initialize an MLP with a single hidden layer.
-        raise NotImplementedError
+        self.units = [n_features,  hidden_size, n_classes]
+        self.W = [np.random.normal(loc=0.1, scale=0.1, size=(
+            self.units[i+1], self.units[i])) for i in range(0, len(self.units)-1)]
+        self.B = [np.zeros(self.units[i+1])
+                  for i in range(0, len(self.units)-1)]
+
+    def forward(self, x, save_hiddens=True):
+        num_layers = len(self.W)
+        hiddens = []
+        hid = x
+        for i in range(num_layers):
+            z = self.W[i] @ hid + self.B[i]
+            if i != num_layers-1:
+                hid = np.maximum(0, z)
+
+                # Flag to save the values of hidden nodes, not needed at prediction time
+                if save_hiddens:
+                    hiddens.append(hid)
+            else:
+                output = z
+
+        return output, hiddens
+
+    def backward(self, x, y, probs, hiddens, learning_rate):
+        num_layers = len(self.W)
+        grad_z = probs - y
+        # s
+        # self.B[i] -= learning_rate * grad_biases[i]
+        for i in range(num_layers-1, -1, -1):
+            h = x if i == 0 else hiddens[i-1]
+            grad_h = self.W[i].T @ grad_z
+            self.W[i] -= learning_rate * grad_z[:, None] @ h[:, None].T
+            self.B[i] -= learning_rate * grad_z
+            derivative = np.where(h > 0, h, 0)
+            grad_z = grad_h * derivative
 
     def predict(self, X):
         # Compute the forward pass of the network. At prediction time, there is
         # no need to save the values of hidden nodes, whereas this is required
         # at training time.
-        raise NotImplementedError
+        self.predicted_labels = []
+        for x in X:
+            # Compute forward pass
+            y, _ = self.forward(x, False)
+            y = np.argmax(y)
+            self.predicted_labels.append(y)
+        self.predicted_labels = np.array(self.predicted_labels)
 
     def evaluate(self, X, y):
         """
@@ -99,7 +141,13 @@ class MLP(object):
         """
         Dont forget to return the loss of the epoch.
         """
-        raise NotImplementedError
+        for x, y_true in zip(X, y):
+            output, hiddens = self.forward(x)
+            probs = np.exp(output) / np.sum(np.exp(output))
+            loss = -y_true @ np.log(probs)
+            raise NotImplementedError
+            self.backward(x, y_true, probs, hiddens, learning_rate)
+            return loss
 
 
 def plot(epochs, train_accs, val_accs):
