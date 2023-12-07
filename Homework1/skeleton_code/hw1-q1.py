@@ -9,7 +9,10 @@ import matplotlib.pyplot as plt
 from sympy import Derivative
 
 import utils
+
+
 from icecream import ic
+import time
 
 
 class LinearModel(object):
@@ -78,6 +81,7 @@ class MLP(object):
     # in main().
     def __init__(self, n_classes, n_features, hidden_size):
         # Initialize an MLP with a single hidden layer.
+        self.n_classes = n_classes
         self.units = [n_features,  hidden_size, n_classes]
         self.W = [np.random.normal(loc=0.1, scale=0.1, size=(
             self.units[i+1], self.units[i])) for i in range(0, len(self.units)-1)]
@@ -104,8 +108,7 @@ class MLP(object):
     def backward(self, x, y, probs, hiddens, learning_rate):
         num_layers = len(self.W)
         grad_z = probs - y
-        # s
-        # self.B[i] -= learning_rate * grad_biases[i]
+
         for i in range(num_layers-1, -1, -1):
             h = x if i == 0 else hiddens[i-1]
             grad_h = self.W[i].T @ grad_z
@@ -118,13 +121,14 @@ class MLP(object):
         # Compute the forward pass of the network. At prediction time, there is
         # no need to save the values of hidden nodes, whereas this is required
         # at training time.
-        self.predicted_labels = []
+        predicted_labels = []
         for x in X:
             # Compute forward pass
             y, _ = self.forward(x, False)
             y = np.argmax(y)
-            self.predicted_labels.append(y)
-        self.predicted_labels = np.array(self.predicted_labels)
+            predicted_labels.append(y)
+        predicted_labels = np.array(predicted_labels)
+        return predicted_labels
 
     def evaluate(self, X, y):
         """
@@ -141,13 +145,22 @@ class MLP(object):
         """
         Dont forget to return the loss of the epoch.
         """
-        for x, y_true in zip(X, y):
+        n_samples = y.shape[0]
+        y_one_hot = np.zeros((n_samples, self.n_classes))
+        loss = 0
+        for i in range(n_samples):
+            y_one_hot[i, y[i]] = 1
+        start_time = time.time()
+        for x, y_true in zip(X, y_one_hot):
             output, hiddens = self.forward(x)
+            output = output - np.max(output)
             probs = np.exp(output) / np.sum(np.exp(output))
-            loss = -y_true @ np.log(probs)
-            raise NotImplementedError
+            loss += -y_true @ np.log(probs)
             self.backward(x, y_true, probs, hiddens, learning_rate)
-            return loss
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Elapsed time: {elapsed_time} seconds")
+        return loss
 
 
 def plot(epochs, train_accs, val_accs):
