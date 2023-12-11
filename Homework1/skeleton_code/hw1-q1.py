@@ -88,6 +88,10 @@ class MLP(object):
         self.B = [np.zeros(self.units[i+1])
                   for i in range(0, len(self.units)-1)]
 
+    def softmax(self, x):
+        exp = np.exp(x - np.max(x))
+        return exp / np.sum(exp)
+
     def forward(self, x, save_hiddens=True):
         num_layers = len(self.W)
         hiddens = []
@@ -153,8 +157,7 @@ class MLP(object):
         start_time = time.time()
         for x, y_true in zip(X, y_one_hot):
             output, hiddens = self.forward(x)
-            output = output - np.max(output)
-            probs = np.exp(output) / np.sum(np.exp(output))
+            probs = self.softmax(output)
             loss += -y_true @ np.log(probs)
             self.backward(x, y_true, probs, hiddens, learning_rate)
         end_time = time.time()
@@ -235,7 +238,6 @@ def main():
                 train_y,
                 learning_rate=opt.learning_rate
             )
-
         train_accs.append(model.evaluate(train_X, train_y))
         valid_accs.append(model.evaluate(dev_X, dev_y))
         if opt.model == 'mlp':
