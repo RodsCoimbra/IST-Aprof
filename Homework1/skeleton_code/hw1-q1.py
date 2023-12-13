@@ -65,13 +65,9 @@ class LogisticRegression(LinearModel):
         learning_rate (float): keep it at the default value for your plots
         """
         # Q1.1b
-        exps = np.exp(np.expand_dims(self.W @ x_i, axis=1))
-        Z = np.sum(exps)
-        prob = exps/Z
-
+        prob = softmax(np.expand_dims(self.W @ x_i, axis=1))
         y_label = np.zeros((self.W.shape[0], 1))
         y_label[y_i] = 1
-
         self.W = self.W + learning_rate * (y_label - prob) @ np.array([x_i])
 
 
@@ -87,10 +83,6 @@ class MLP(object):
             self.units[i+1], self.units[i])) for i in range(0, len(self.units)-1)]
         self.B = [np.zeros(self.units[i+1])
                   for i in range(0, len(self.units)-1)]
-
-    def softmax(self, x):
-        exp = np.exp(x - np.max(x))
-        return exp / np.sum(exp)
 
     def forward(self, x, save_hiddens=True):
         num_layers = len(self.W)
@@ -157,13 +149,18 @@ class MLP(object):
         start_time = time.time()
         for x, y_true in zip(X, y_one_hot):
             output, hiddens = self.forward(x)
-            probs = self.softmax(output)
+            probs = softmax(output)
             loss += -y_true @ np.log(probs)
             self.backward(x, y_true, probs, hiddens, learning_rate)
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Elapsed time: {elapsed_time} seconds")
         return loss
+
+
+def softmax(x):
+    exp = np.exp(x - np.max(x))
+    return exp / np.sum(exp)
 
 
 def plot(epochs, train_accs, val_accs):
