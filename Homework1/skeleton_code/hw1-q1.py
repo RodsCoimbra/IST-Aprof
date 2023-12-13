@@ -10,8 +10,6 @@ from sympy import Derivative
 
 import utils
 
-import time
-
 
 class LinearModel(object):
     def __init__(self, n_classes, n_features, **kwargs):
@@ -140,20 +138,16 @@ class MLP(object):
         Dont forget to return the loss of the epoch.
         """
         n_samples = y.shape[0]
-        y_one_hot = np.zeros((n_samples, self.n_classes))
         loss = 0
-        for i in range(n_samples):
-            y_one_hot[i, y[i]] = 1
-        start_time = time.time()
-        for x, y_true in zip(X, y_one_hot):
+        for x, label in zip(X, y):
+            y_one_hot = np.zeros(self.n_classes)
+            y_one_hot[label] = 1
             output, hiddens = self.forward(x)
             probs = softmax(output)
-            loss += -y_true @ np.log(probs)
-            self.backward(x, y_true, probs, hiddens, learning_rate)
+            loss += -y_one_hot @ np.log(probs)
+            self.backward(x, y_one_hot, probs, hiddens, learning_rate)
+            
         loss /= n_samples
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"Elapsed time: {elapsed_time} seconds")
         return loss
 
 
