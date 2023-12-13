@@ -10,8 +10,6 @@ from sympy import Derivative
 
 import utils
 
-
-from icecream import ic
 import time
 
 
@@ -152,6 +150,7 @@ class MLP(object):
             probs = softmax(output)
             loss += -y_true @ np.log(probs)
             self.backward(x, y_true, probs, hiddens, learning_rate)
+        loss /= n_samples
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Elapsed time: {elapsed_time} seconds")
