@@ -1,5 +1,5 @@
 
-name: IST_DL21_Env
+name: IST_DL21
 dependencies:
   - python=3.8
   - numpy

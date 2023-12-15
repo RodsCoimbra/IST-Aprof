@@ -11,9 +11,6 @@ from matplotlib import pyplot as plt
 
 import utils
 
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-print(DEVICE)
-
 
 # Q2.1
 class LogisticRegression(nn.Module):
@@ -29,10 +26,9 @@ class LogisticRegression(nn.Module):
         pytorch to make weights and biases, have a look at
         https://pytorch.org/docs/stable/nn.html
         """
-        super(LogisticRegression, self).__init__()
+        super().__init__()
         # In a pytorch module, the declarations of layers needs to come after
         # the super __init__ line, otherwise the magic doesn't work.
-        self.camada1 = nn.Linear(n_features, n_classes)
 
     def forward(self, x, **kwargs):
         """
@@ -48,8 +44,6 @@ class LogisticRegression(nn.Module):
         forward pass -- this is enough for it to figure out how to do the
         backward pass.
         """
-        x = self.camada1(x)
-        return x
         raise NotImplementedError
 
 
@@ -70,20 +64,9 @@ class FeedforwardNetwork(nn.Module):
         attributes that each FeedforwardNetwork instance has. Note that nn
         includes modules for several activation functions and dropout as well.
         """
-        if activation_type == "tanh":
-            activation = nn.Tanh()
-        else:
-            activation = nn.ReLU()
-        super(FeedforwardNetwork, self).__init__()
-        self.rede = nn.ModuleList()
-        input_size = n_features
-        for i in range(0, layers, 2):
-            self.rede.append(nn.Linear(input_size, hidden_size))
-            self.rede.append(activation)
-            self.rede.append(nn.Dropout(p=dropout))
-            input_size = hidden_size
-
-        self.rede.append(nn.Linear(hidden_size, n_classes))
+        super().__init__()
+        # Implement me!
+        raise NotImplementedError
 
     def forward(self, x, **kwargs):
         """
@@ -93,11 +76,7 @@ class FeedforwardNetwork(nn.Module):
         the output logits from x. This will include using various hidden
         layers, pointwise nonlinear functions, and dropout.
         """
-
-        for a in self.rede:
-            x = a(x)
-
-        return x
+        raise NotImplementedError
 
 
 def train_batch(X, y, model, optimizer, criterion, **kwargs):
@@ -118,19 +97,6 @@ def train_batch(X, y, model, optimizer, criterion, **kwargs):
     This function should return the loss (tip: call loss.item()) to get the
     loss as a numerical value that is not part of the computation graph.
     """
-    # clear the gradients
-    optimizer.zero_grad()
-    # compute the model output
-    yhat = model(X)
-    # calculate loss
-    loss = criterion(yhat, y)
-    # credit assignment
-    loss.backward()
-    # update model weights
-    optimizer.step()
-
-    return loss
-
     raise NotImplementedError
 
 
@@ -160,7 +126,7 @@ def evaluate(model, X, y, criterion):
 
 def plot(epochs, plottables, name='', ylim=None):
     """Plot the plottables over the epochs.
-
+    
     Plottables is a dictionary mapping labels to lists of values.
     """
     plt.clf()
@@ -181,7 +147,7 @@ def main():
     parser.add_argument('-epochs', default=20, type=int,
                         help="""Number of epochs to train for. You should not
                         need to change this value for your plots.""")
-    parser.add_argument('-batch_size', default=16, type=int,
+    parser.add_argument('-batch_size', default=1, type=int,
                         help="Size of training batch.")
     parser.add_argument('-learning_rate', type=float, default=0.01)
     parser.add_argument('-l2_decay', type=float, default=0)
@@ -195,6 +161,7 @@ def main():
     opt = parser.parse_args()
 
     utils.configure_seed(seed=42)
+
     data = utils.load_oct_data()
     dataset = utils.ClassificationDataset(data)
     train_dataloader = DataLoader(
@@ -205,6 +172,7 @@ def main():
 
     n_classes = torch.unique(dataset.y).shape[0]  # 10
     n_feats = dataset.X.shape[1]
+
     # initialize the model
     if opt.model == 'logistic_regression':
         model = LogisticRegression(n_classes, n_feats)
@@ -222,7 +190,6 @@ def main():
     optims = {"adam": torch.optim.Adam, "sgd": torch.optim.SGD}
 
     optim_cls = optims[opt.optimizer]
-    print(opt.optimizer)
     optimizer = optim_cls(
         model.parameters(),
         lr=opt.learning_rate,
@@ -281,9 +248,8 @@ def main():
     else:
         raise ValueError(f"Unknown model {opt.model}")
     plot(epochs, losses, name=f'{opt.model}-training-loss-{config}', ylim=ylim)
-    accuracy = {"Valid Accuracy": valid_accs}
-    plot(epochs, accuracy,
-         name=f'{opt.model}-validation-accuracy-{config}', ylim=(0., 1.))
+    accuracy = { "Valid Accuracy": valid_accs }
+    plot(epochs, accuracy, name=f'{opt.model}-validation-accuracy-{config}', ylim=(0., 1.))
 
 
 if __name__ == '__main__':

@@ -75,9 +75,9 @@ class FeedforwardNetwork(nn.Module):
         else:
             activation = nn.ReLU()
         super(FeedforwardNetwork, self).__init__()
-        self.rede = nn.ModuleList()
+        self.rede = nn.Sequential()
         input_size = n_features
-        for i in range(0, layers, 2):
+        for i in range(0, layers+1):
             self.rede.append(nn.Linear(input_size, hidden_size))
             self.rede.append(activation)
             self.rede.append(nn.Dropout(p=dropout))
@@ -183,11 +183,11 @@ def main():
                         need to change this value for your plots.""")
     parser.add_argument('-batch_size', default=16, type=int,
                         help="Size of training batch.")
-    parser.add_argument('-learning_rate', type=float, default=0.01)
+    parser.add_argument('-learning_rate', type=float, default=0.1)
     parser.add_argument('-l2_decay', type=float, default=0)
-    parser.add_argument('-hidden_size', type=int, default=100)
-    parser.add_argument('-layers', type=int, default=1)
-    parser.add_argument('-dropout', type=float, default=0.3)
+    parser.add_argument('-hidden_size', type=int, default=200)
+    parser.add_argument('-layers', type=int, default=2)
+    parser.add_argument('-dropout', type=float, default=0.0)
     parser.add_argument('-activation',
                         choices=['tanh', 'relu'], default='relu')
     parser.add_argument('-optimizer',
