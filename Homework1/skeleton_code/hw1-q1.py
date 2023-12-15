@@ -6,7 +6,6 @@ import argparse
 
 import numpy as np
 import matplotlib.pyplot as plt
-from sympy import Derivative
 
 import utils
 
@@ -146,7 +145,7 @@ class MLP(object):
             probs = softmax(output)
             loss += -y_one_hot @ np.log(probs)
             self.backward(x, y_one_hot, probs, hiddens, learning_rate)
-            
+
         loss /= n_samples
         return loss
 
