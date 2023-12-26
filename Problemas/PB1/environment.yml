@@ -1,5 +1,4 @@
-
-name: IST_DL21
+name: DL21
 dependencies:
   - python=3.10
   - numpy
