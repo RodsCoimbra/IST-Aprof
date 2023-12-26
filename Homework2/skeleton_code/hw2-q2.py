@@ -12,50 +12,59 @@ import torch.nn.functional as F
 import torchvision
 from matplotlib import pyplot as plt
 import numpy as np
-
 import utils
+from icecream import ic
+
 
 class CNN(nn.Module):
-    
+
     def __init__(self, dropout_prob, no_maxpool=False):
         super(CNN, self).__init__()
         self.no_maxpool = no_maxpool
+        ic(no_maxpool)
         if not no_maxpool:
             # Implementation for Q2.1
-            raise NotImplementedError
+            self.conv1 = nn.Conv2d(1, 8, kernel_size=3,
+                                   stride=1, padding='same')
+            self.conv2 = nn.Conv2d(8, 16, kernel_size=3, stride=1, padding=0)
+            self.Max = nn.MaxPool2d(kernel_size=2, stride=2)
         else:
             # Implementation for Q2.2
-            raise NotImplementedError
-        
+            self.conv1 = nn.Conv2d(1, 8, kernel_size=3,
+                                   stride=2, padding=1)
+            self.conv2 = nn.Conv2d(8, 16, kernel_size=3, stride=2, padding=0)
+
         # Implementation for Q2.1 and Q2.2
-        raise NotImplementedError
-        
+        self.fc1 = nn.Linear(16*6*6, 320)
+        self.drop = nn.Dropout(p=dropout_prob)
+        self.fc2 = nn.Linear(320, 120)
+        self.fc3 = nn.Linear(120, 4)
+
     def forward(self, x):
         # input should be of shape [b, c, w, h]
+        x = x.view(-1, 1, 28, 28)
         # conv and relu layers
-
+        x = F.relu(self.conv1(x))
         # max-pool layer if using it
         if not self.no_maxpool:
-            raise NotImplementedError
-        
+            x = self.Max(x)
         # conv and relu layers
-        
-
+        x = F.relu(self.conv2(x))
         # max-pool layer if using it
         if not self.no_maxpool:
-            raise NotImplementedError
-        
+            x = self.Max(x)
         # prep for fully connected layer + relu
-        
+        x = x.view(-1, 16*6*6)
+        x = F.relu(self.fc1(x))
         # drop out
         x = self.drop(x)
-
         # second fully connected layer + relu
-        
+        x = F.relu(self.fc2(x))
         # last fully connected layer
         x = self.fc3(x)
-        
-        return F.log_softmax(x,dim=1)
+
+        return F.log_softmax(x, dim=1)
+
 
 def train_batch(X, y, model, optimizer, criterion, **kwargs):
     """
@@ -102,8 +111,9 @@ def plot(epochs, plottable, ylabel='', name=''):
 
 
 def get_number_trainable_params(model):
-    ## TO IMPLEMENT - REPLACE return 0
-    return 0
+    # TO IMPLEMENT - REPLACE return 0
+    trainable_params = sum(p.numel() for p in model.parameters())
+    return trainable_params
 
 
 def main():
@@ -120,7 +130,7 @@ def main():
     parser.add_argument('-optimizer',
                         choices=['sgd', 'adam'], default='sgd')
     parser.add_argument('-no_maxpool', action='store_true')
-    
+
     opt = parser.parse_args()
 
     utils.configure_seed(seed=42)
@@ -134,7 +144,7 @@ def main():
 
     # initialize the model
     model = CNN(opt.dropout, no_maxpool=opt.no_maxpool)
-    
+
     # get an optimizer
     optims = {"adam": torch.optim.Adam, "sgd": torch.optim.SGD}
 
@@ -142,10 +152,10 @@ def main():
     optimizer = optim_cls(
         model.parameters(), lr=opt.learning_rate, weight_decay=opt.l2_decay
     )
-    
+
     # get a loss criterion
     criterion = nn.NLLLoss()
-    
+
     # training loop
     epochs = np.arange(1, opt.epochs + 1)
     train_mean_losses = []
@@ -167,12 +177,17 @@ def main():
 
     print('Final Test acc: %.4f' % (evaluate(model, test_X, test_y)))
     # plot
-    config = "{}-{}-{}-{}-{}".format(opt.learning_rate, opt.dropout, opt.l2_decay, opt.optimizer, opt.no_maxpool)
+    config = "{}-{}-{}-{}-{}".format(opt.learning_rate,
+                                     opt.dropout, opt.l2_decay, opt.optimizer, opt.no_maxpool)
 
-    plot(epochs, train_mean_losses, ylabel='Loss', name='CNN-training-loss-{}'.format(config))
-    plot(epochs, valid_accs, ylabel='Accuracy', name='CNN-validation-accuracy-{}'.format(config))
-    
-    print('Number of trainable parameters: ', get_number_trainable_params(model))
+    plot(epochs, train_mean_losses, ylabel='Loss',
+         name='CNN-training-loss-{}'.format(config))
+    plot(epochs, valid_accs, ylabel='Accuracy',
+         name='CNN-validation-accuracy-{}'.format(config))
+
+    print('Number of trainable parameters: ',
+          get_number_trainable_params(model))
+
 
 if __name__ == '__main__':
     main()
