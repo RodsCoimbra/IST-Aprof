@@ -1,12 +1,10 @@
 
 name: IST_DL21
 dependencies:
-  - python=3.8
+  - python=3.10
   - numpy
   - pillow
   - scikit-learn
-  - pytorch 
-  - torchvision
   - huggingface::transformers
   - notebook
   - nb_conda_kernels
