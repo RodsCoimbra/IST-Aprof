@@ -13,7 +13,6 @@ import torchvision
 from matplotlib import pyplot as plt
 import numpy as np
 import utils
-from icecream import ic
 
 
 class CNN(nn.Module):
@@ -21,7 +20,6 @@ class CNN(nn.Module):
     def __init__(self, dropout_prob, no_maxpool=False):
         super(CNN, self).__init__()
         self.no_maxpool = no_maxpool
-        ic(no_maxpool)
         if not no_maxpool:
             # Implementation for Q2.1
             self.conv1 = nn.Conv2d(1, 8, kernel_size=3,
