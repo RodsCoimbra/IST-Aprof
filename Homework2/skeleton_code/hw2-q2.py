@@ -17,7 +17,7 @@ import utils
 
 class CNN(nn.Module):
 
-    def __init__(self, dropout_prob, no_maxpool=False):
+    def __init__(self, dropout_prob, n_classes, no_maxpool=False):
         super(CNN, self).__init__()
         self.no_maxpool = no_maxpool
         if not no_maxpool:
@@ -36,7 +36,7 @@ class CNN(nn.Module):
         self.fc1 = nn.Linear(16*6*6, 320)
         self.drop = nn.Dropout(p=dropout_prob)
         self.fc2 = nn.Linear(320, 120)
-        self.fc3 = nn.Linear(120, 4)
+        self.fc3 = nn.Linear(120, n_classes)
 
     def forward(self, x):
         # input should be of shape [b, c, w, h]
@@ -139,9 +139,8 @@ def main():
         dataset, batch_size=opt.batch_size, shuffle=True)
     dev_X, dev_y = dataset.dev_X, dataset.dev_y
     test_X, test_y = dataset.test_X, dataset.test_y
-
     # initialize the model
-    model = CNN(opt.dropout, no_maxpool=opt.no_maxpool)
+    model = CNN(opt.dropout, len(np.unique(dev_y)), no_maxpool=opt.no_maxpool)
 
     # get an optimizer
     optims = {"adam": torch.optim.Adam, "sgd": torch.optim.SGD}
